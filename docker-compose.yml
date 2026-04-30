@@ -1,0 +1,30 @@
+name: uix-frontend
+
+services:
+  frontend:
+    container_name: uix-web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:4000}
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING}
+      WATCHPACK_POLLING: ${WATCHPACK_POLLING}
+    ports:
+      - "${WEB_PORT:-5173}:${WEB_PORT_CONTAINER:-5173}"
+    volumes:
+      - ./:/app
+      - uix-frontend-node-modules:/app/node_modules
+    networks:
+      - uix-shared
+
+volumes:
+  uix-frontend-node-modules:
+
+networks:
+  uix-shared:
+    name: uix-shared
+    external: true

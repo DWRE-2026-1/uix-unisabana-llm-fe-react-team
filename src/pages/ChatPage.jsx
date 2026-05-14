@@ -4,6 +4,7 @@ import { ConversationSidebar } from "../ui/ConversationSidebar";
 import { ProviderModelBar } from "../ui/ProviderModelBar";
 import { ChatThread } from "../ui/ChatThread";
 import { ChatComposer } from "../ui/ChatComposer";
+import { sendChatMessage, streamChatMessage } from "../services/chat-api";
 
 export function ChatPage() {
   const [prompt, setPrompt] = useState("");
@@ -18,21 +19,26 @@ export function ChatPage() {
     { id: "c-2", title: "Notas de clase", updatedAt: "Ayer" }
   ];
 
-  async function sendPrompt(event) {
-    event.preventDefault();
-    setLoading(true);
-    setAnswer("");
+ async function sendPrompt(event) {
+  event.preventDefault();
+  setLoading(true);
+  setAnswer("");
 
-    // Scaffolding behavior: local simulated response.
-    setTimeout(() => {
-      if (streamMode) {
-        setAnswer(`[SSE scaffold] Provider: ${provider}, model: ${model}. Prompt: ${prompt}`);
-      } else {
-        setAnswer(`[Scaffold] Provider: ${provider}, model: ${model}. Prompt: ${prompt}`);
-      }
-      setLoading(false);
-    }, 500);
+  try {
+    if (streamMode) {
+      await streamChatMessage({ prompt, provider }, (chunk) => {
+        setAnswer(prev => prev + chunk);
+      });
+    } else {
+      const data = await sendChatMessage({ prompt, provider });
+      setAnswer(data.response);
+    }
+  } catch (error) {
+    setAnswer(`Error: ${error.message}`);
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <main className="shell">

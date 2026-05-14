@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, useState } from "react";
+import { login as loginApi, logout as logoutApi } from "../services/auth-api";
 
 const AuthContext = createContext(null);
 
@@ -9,21 +10,19 @@ export function AuthProvider({ children }) {
   });
 
   async function login(credentials) {
-    // Scaffolding login: mocked local session for UI flow.
-    const role = credentials.email === "admin@example.com" ? "admin" : "user";
-    const fakeUser = {
-      id: "scaffold-user-id",
-      name: credentials.email === "admin@example.com" ? "Admin" : "User",
-      email: credentials.email,
-      role
-    };
-    localStorage.setItem("uix_token", "scaffold-token");
-    localStorage.setItem("uix_user", JSON.stringify(fakeUser));
-    setUser(fakeUser);
-    return fakeUser;
+    const response = await loginApi(credentials);
+    const { token, user: userData } = response.data;
+    localStorage.setItem("uix_token", token);
+    localStorage.setItem("uix_user", JSON.stringify(userData));
+    setUser(userData);
+    return userData;
   }
 
-  function logout() {
+  async function logout() {
+    try {
+      await logoutApi();
+    } catch {
+    }
     localStorage.removeItem("uix_token");
     localStorage.removeItem("uix_user");
     setUser(null);

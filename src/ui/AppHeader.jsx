@@ -1,8 +1,13 @@
+import shield from "../images/unisabana-shield.png";
+
 export function AppHeader() {
   return (
     <header className="app-header">
-      <h1>UIX Unisabana LLM</h1>
-      <p>Scaffolding base institucional para chat multiusuario con modelos LLM.</p>
+      <img src={shield} alt="Escudo Unisabana" className="header-shield" />
+      <div>
+        <h1>Asistente Unisabana</h1>
+        <p>Interfaz base institucional para conversaciones con modelos LLM.</p>
+      </div>
     </header>
   );
 }

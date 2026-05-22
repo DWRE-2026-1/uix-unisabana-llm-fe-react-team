@@ -116,6 +116,7 @@ select {
   border-radius: var(--radius-lg);
   box-shadow: 0 18px 42px rgba(0, 15, 40, 0.16);
   overflow: hidden;
+  min-height: 72vh;
 }
 
 .app-header {
@@ -147,7 +148,7 @@ select {
 .app-body {
   display: grid;
   grid-template-columns: 292px minmax(0, 1fr);
-  min-height: 72vh;
+  min-height: 0;
   transition: grid-template-columns 0.2s ease;
 }
 
@@ -166,6 +167,8 @@ select {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
   transition: width 0.2s ease, padding 0.2s ease;
 }
 
@@ -641,6 +644,41 @@ button:disabled {
 }
 
 @media (min-width: 981px) {
+  .app-scaffold {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 6.5rem);
+    max-height: calc(100dvh - 4rem);
+  }
+
+  .app-header {
+    flex-shrink: 0;
+  }
+
+  .app-body,
+  .app-body--sidebar-collapsed {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    align-items: stretch;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    height: 100%;
+    max-height: 100%;
+  }
+
+  .chat-area {
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+  }
+
+  .composer {
+    flex-shrink: 0;
+  }
+
   .sidebar-mobile-close {
     display: none;
   }

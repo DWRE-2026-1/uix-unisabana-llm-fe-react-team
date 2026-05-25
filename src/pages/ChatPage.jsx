@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useConversations } from "../hooks/useConversations";
 import { AppHeader } from "../ui/AppHeader";
 import { ConversationSidebar } from "../ui/ConversationSidebar";
 import { ProviderModelBar } from "../ui/ProviderModelBar";
@@ -14,11 +15,38 @@ export function ChatPage() {
   const [provider, setProvider] = useState("ollama");
   const [model, setModel] = useState("llama3.1");
 
-  const conversations = [
-    { id: "c-1", title: "Conversación de ejemplo", updatedAt: "Reciente" },
-    { id: "c-2", title: "Notas de clase", updatedAt: "Ayer" }
-  ];
+  const {
+    conversations,
+    activeConversation,
+    activeId,
+    collapsed,
+    mobileOpen,
+    loading: conversationsLoading,
+    selectConversation,
+    createConversation,
+    deleteConversation,
+    bumpActiveConversation,
+    toggleCollapsed,
+    setMobileOpen
+  } = useConversations();
 
+  async function sendPrompt(event) {
+    event.preventDefault();
+    if (!prompt.trim()) return;
+
+    setLoading(true);
+    setAnswer("");
+
+    await bumpActiveConversation();
+
+    setTimeout(() => {
+      if (streamMode) {
+        setAnswer(`[SSE scaffold] Provider: ${provider}, model: ${model}. Prompt: ${prompt}`);
+      } else {
+        setAnswer(`[Scaffold] Provider: ${provider}, model: ${model}. Prompt: ${prompt}`);
+      }
+      setLoading(false);
+    }, 500);
  async function sendPrompt(event) {
   event.preventDefault();
   setLoading(true);
@@ -40,15 +68,47 @@ export function ChatPage() {
   }
 }
 
+  async function handleNewChat() {
+    await createConversation();
+    setPrompt("");
+    setAnswer("");
+    setLoading(false);
+  }
+
+  async function handleSelectConversation(conversationId) {
+    if (conversationId === activeId) {
+      setMobileOpen(false);
+      return;
+    }
+
+    selectConversation(conversationId);
+    setPrompt("");
+    setAnswer("");
+    setLoading(false);
+  }
+
+  const conversationTitle = activeConversation?.title || "Nueva conversación";
+
   return (
     <main className="shell">
       <section className="app-scaffold">
-        <AppHeader />
-        <div className="app-body">
-          <ConversationSidebar conversations={conversations} />
+        <AppHeader onOpenHistory={() => setMobileOpen(true)} />
+        <div className={`app-body ${collapsed ? "app-body--sidebar-collapsed" : ""}`}>
+          <ConversationSidebar
+            conversations={conversations}
+            activeId={activeId}
+            collapsed={collapsed}
+            mobileOpen={mobileOpen}
+            loading={conversationsLoading}
+            onSelect={handleSelectConversation}
+            onNew={handleNewChat}
+            onDelete={deleteConversation}
+            onToggleCollapse={toggleCollapsed}
+            onCloseMobile={() => setMobileOpen(false)}
+          />
           <section className="chat-area">
             <ProviderModelBar
-              title="Nueva conversación"
+              title={conversationTitle}
               provider={provider}
               model={model}
               onProviderChange={setProvider}

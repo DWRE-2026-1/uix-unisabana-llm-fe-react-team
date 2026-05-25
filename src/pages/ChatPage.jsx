@@ -39,34 +39,21 @@ export function ChatPage() {
 
     await bumpActiveConversation();
 
-    setTimeout(() => {
+    try {
       if (streamMode) {
-        setAnswer(`[SSE scaffold] Provider: ${provider}, model: ${model}. Prompt: ${prompt}`);
+        await streamChatMessage({ prompt, provider }, (chunk) => {
+          setAnswer(prev => prev + chunk);
+        });
       } else {
-        setAnswer(`[Scaffold] Provider: ${provider}, model: ${model}. Prompt: ${prompt}`);
+        const data = await sendChatMessage({ prompt, provider });
+        setAnswer(data.response);
       }
+    } catch (error) {
+      setAnswer(`Error: ${error.message}`);
+    } finally {
       setLoading(false);
-    }, 500);
- async function sendPrompt(event) {
-  event.preventDefault();
-  setLoading(true);
-  setAnswer("");
-
-  try {
-    if (streamMode) {
-      await streamChatMessage({ prompt, provider }, (chunk) => {
-        setAnswer(prev => prev + chunk);
-      });
-    } else {
-      const data = await sendChatMessage({ prompt, provider });
-      setAnswer(data.response);
     }
-  } catch (error) {
-    setAnswer(`Error: ${error.message}`);
-  } finally {
-    setLoading(false);
   }
-}
 
   async function handleNewChat() {
     await createConversation();
@@ -80,7 +67,6 @@ export function ChatPage() {
       setMobileOpen(false);
       return;
     }
-
     selectConversation(conversationId);
     setPrompt("");
     setAnswer("");

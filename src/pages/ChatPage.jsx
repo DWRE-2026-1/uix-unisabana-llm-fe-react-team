@@ -5,6 +5,7 @@ import { ConversationSidebar } from "../ui/ConversationSidebar";
 import { ProviderModelBar } from "../ui/ProviderModelBar";
 import { ChatThread } from "../ui/ChatThread";
 import { ChatComposer } from "../ui/ChatComposer";
+import { sendChatMessage, streamChatMessage } from "../services/chat-api";
 
 export function ChatPage() {
   const [prompt, setPrompt] = useState("");
@@ -46,7 +47,26 @@ export function ChatPage() {
       }
       setLoading(false);
     }, 500);
+ async function sendPrompt(event) {
+  event.preventDefault();
+  setLoading(true);
+  setAnswer("");
+
+  try {
+    if (streamMode) {
+      await streamChatMessage({ prompt, provider }, (chunk) => {
+        setAnswer(prev => prev + chunk);
+      });
+    } else {
+      const data = await sendChatMessage({ prompt, provider });
+      setAnswer(data.response);
+    }
+  } catch (error) {
+    setAnswer(`Error: ${error.message}`);
+  } finally {
+    setLoading(false);
   }
+}
 
   async function handleNewChat() {
     await createConversation();

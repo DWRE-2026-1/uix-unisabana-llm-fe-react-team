@@ -408,9 +408,25 @@ textarea:focus {
 .chat-thread {
   padding: 1rem 1.05rem;
   overflow: auto;
+  min-height: 0;
   background: linear-gradient(180deg, rgba(0, 44, 95, 0.04), transparent 22%);
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.75rem;
+}
+
+.chat-thread-empty {
+  margin: auto;
+  max-width: 28rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.chat-thread-anchor {
+  height: 1px;
+  flex-shrink: 0;
 }
 
 .message {
@@ -439,6 +455,11 @@ textarea:focus {
 
 .message-assistant {
   background: var(--assistant);
+}
+
+.message-loading p {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .composer {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useChatMessages } from "../hooks/useChatMessages";
 import { useConversations } from "../hooks/useConversations";
 import { AppHeader } from "../ui/AppHeader";
 import { ConversationSidebar } from "../ui/ConversationSidebar";
@@ -8,8 +9,6 @@ import { ChatComposer } from "../ui/ChatComposer";
 
 export function ChatPage() {
   const [prompt, setPrompt] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [loading, setLoading] = useState(false);
   const [streamMode, setStreamMode] = useState(true);
   const [provider, setProvider] = useState("ollama");
   const [model, setModel] = useState("llama3.1");
@@ -29,33 +28,29 @@ export function ChatPage() {
     setMobileOpen
   } = useConversations();
 
+  const { messages, loading, sendMessage } = useChatMessages(activeId);
+
   async function sendPrompt(event) {
     event.preventDefault();
-    if (!prompt.trim()) return;
+    const content = prompt.trim();
+    if (!content || loading) return;
 
-    setLoading(true);
-    setAnswer("");
-
-    await bumpActiveConversation();
-
-    setTimeout(() => {
-      if (streamMode) {
-        setAnswer(`[SSE scaffold] Provider: ${provider}, model: ${model}. Prompt: ${prompt}`);
-      } else {
-        setAnswer(`[Scaffold] Provider: ${provider}, model: ${model}. Prompt: ${prompt}`);
-      }
-      setLoading(false);
-    }, 500);
+    setPrompt("");
+    await sendMessage({
+      content,
+      provider,
+      model,
+      streamMode,
+      onConversationTouch: bumpActiveConversation
+    });
   }
 
   async function handleNewChat() {
     await createConversation();
     setPrompt("");
-    setAnswer("");
-    setLoading(false);
   }
 
-  async function handleSelectConversation(conversationId) {
+  function handleSelectConversation(conversationId) {
     if (conversationId === activeId) {
       setMobileOpen(false);
       return;
@@ -63,8 +58,6 @@ export function ChatPage() {
 
     selectConversation(conversationId);
     setPrompt("");
-    setAnswer("");
-    setLoading(false);
   }
 
   const conversationTitle = activeConversation?.title || "Nueva conversación";
@@ -94,7 +87,7 @@ export function ChatPage() {
               onProviderChange={setProvider}
               onModelChange={setModel}
             />
-            <ChatThread prompt={prompt} answer={answer} loading={loading} />
+            <ChatThread messages={messages} loading={loading} />
             <ChatComposer
               prompt={prompt}
               loading={loading}

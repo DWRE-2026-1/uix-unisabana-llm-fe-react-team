@@ -18,7 +18,7 @@ function writeLocalConversations(conversations) {
 
 function normalizeConversation(conversation) {
   return {
-    id: String(conversation.id),
+    id: String(conversation._id || conversation.id),
     title: conversation.title || "Sin título",
     updatedAt: conversation.updatedAt || new Date().toISOString()
   };
@@ -32,22 +32,24 @@ function sortConversations(conversations) {
 
 function unwrapList(body) {
   if (Array.isArray(body)) return body;
+  if (Array.isArray(body?.data?.items)) return body.data.items;
   if (Array.isArray(body?.data)) return body.data;
   if (Array.isArray(body?.conversations)) return body.conversations;
   return [];
 }
 
 function unwrapItem(body) {
-  if (body?.data && typeof body.data === "object") return body.data;
+  if (body?.data && typeof body.data === "object" && !Array.isArray(body.data)) return body.data;
   if (body?.conversation && typeof body.conversation === "object") return body.conversation;
-  if (body && typeof body === "object" && body.id) return body;
+  if (body && typeof body === "object" && (body._id || body.id)) return body;
   return null;
 }
 
 async function withLocalFallback(action, fallback) {
   try {
     return await action();
-  } catch {
+  } catch (error) {
+    console.error("API error, usando fallback local:", error.message);
     return fallback();
   }
 }
@@ -115,4 +117,27 @@ export async function touchConversation(conversationId, patch = {}) {
   conversations[index] = updated;
   writeLocalConversations(conversations);
   return updated;
+}
+
+export async function saveMessage(payload) {
+  return withLocalFallback(
+    async () => {
+      const body = await apiRequest("/api/messages", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      return body.data;
+    },
+    () => null
+  );
+}
+
+export async function getMessages(conversationId) {
+  return withLocalFallback(
+    async () => {
+      const body = await apiRequest(`/api/messages?conversationId=${conversationId}`);
+      return Array.isArray(body?.data) ? body.data : [];
+    },
+    () => []
+  );
 }

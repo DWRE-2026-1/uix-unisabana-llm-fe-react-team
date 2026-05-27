@@ -1,37 +1,14 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { sendChatMessage, streamChatMessage } from "../services/chat-api";
+import { saveMessage, getMessages } from "../services/conversations-api";
 
-function createMessage(role, content) {
+function createMessage(role, content, id) {
   return {
-    id: crypto.randomUUID(),
+    id: id || crypto.randomUUID(),
     role,
     content,
     createdAt: new Date().toISOString()
   };
-}
-
-function buildMockReply({ prompt, provider, model, streamMode }) {
-  const mode = streamMode ? "SSE (simulado)" : "respuesta completa";
-  return `[${mode}] Proveedor: ${provider}, modelo: ${model}.\n\nRecibí tu mensaje: «${prompt}»`;
-}
-
-async function simulateReply(text, streamMode, onChunk) {
-  if (!streamMode) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    onChunk(text);
-    return;
-  }
-
-  let index = 0;
-  await new Promise((resolve) => {
-    const interval = setInterval(() => {
-      index = Math.min(index + 3, text.length);
-      onChunk(text.slice(0, index));
-      if (index >= text.length) {
-        clearInterval(interval);
-        resolve();
-      }
-    }, 24);
-  });
 }
 
 export function useChatMessages(activeConversationId) {
@@ -51,40 +28,70 @@ export function useChatMessages(activeConversationId) {
     });
   }, []);
 
+  useEffect(() => {
+    if (!activeConversationId) return;
+
+    async function loadMessages() {
+      const loaded = await getMessages(activeConversationId);
+      const normalized = loaded.map((m) => createMessage(m.role, m.content, m._id));
+      setConversationMessages(activeConversationId, normalized);
+    }
+
+    loadMessages();
+  }, [activeConversationId, setConversationMessages]);
+
   const sendMessage = useCallback(
-    async ({ content, provider, model, streamMode, onConversationTouch }) => {
+    async ({ content, provider, streamMode, onConversationTouch }) => {
       const trimmed = content.trim();
       if (!trimmed || !activeConversationId || loading) return false;
 
-      const userMessage = createMessage("user", trimmed);
       const assistantId = crypto.randomUUID();
-      const assistantPlaceholder = {
-        id: assistantId,
-        role: "assistant",
-        content: "",
-        createdAt: new Date().toISOString()
-      };
 
       setConversationMessages(activeConversationId, (current) => [
         ...current,
-        userMessage,
-        assistantPlaceholder
+        createMessage("user", trimmed),
+        { id: assistantId, role: "assistant", content: "", createdAt: new Date().toISOString() }
       ]);
-      setLoading(true);
 
+      setLoading(true);
       await onConversationTouch?.();
 
-      const reply = buildMockReply({ prompt: trimmed, provider, model, streamMode });
+      
+      await saveMessage({ conversationId: activeConversationId, role: "user", content: trimmed });
 
       try {
-        await simulateReply(reply, streamMode, (partial) => {
+        let fullAnswer = "";
+
+        if (streamMode) {
+          await streamChatMessage({ prompt: trimmed, provider }, (chunk) => {
+            fullAnswer += chunk;
+            setConversationMessages(activeConversationId, (current) =>
+              current.map((message) =>
+                message.id === assistantId ? { ...message, content: fullAnswer } : message
+              )
+            );
+          });
+        } else {
+          const data = await sendChatMessage({ prompt: trimmed, provider });
+          fullAnswer = data.response;
           setConversationMessages(activeConversationId, (current) =>
             current.map((message) =>
-              message.id === assistantId ? { ...message, content: partial } : message
+              message.id === assistantId ? { ...message, content: fullAnswer } : message
             )
           );
-        });
+        }
+
+        
+        await saveMessage({ conversationId: activeConversationId, role: "assistant", content: fullAnswer });
+
         return true;
+      } catch (error) {
+        setConversationMessages(activeConversationId, (current) =>
+          current.map((message) =>
+            message.id === assistantId ? { ...message, content: `Error: ${error.message}` } : message
+          )
+        );
+        return false;
       } finally {
         setLoading(false);
       }
@@ -92,9 +99,5 @@ export function useChatMessages(activeConversationId) {
     [activeConversationId, loading, setConversationMessages]
   );
 
-  return {
-    messages,
-    loading,
-    sendMessage
-  };
+  return { messages, loading, sendMessage };
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-
+import MarkdownRenderer from './MarkdownRenderer';
 const ChatPanel = () => {
   // Simulamos algunos mensajes para que veas el diseño
   const [messages, setMessages] = useState([
@@ -34,7 +34,12 @@ const ChatPanel = () => {
       <div className="messages-container">
         {messages.map((msg) => (
           <div key={msg.id} className={`message-bubble ${msg.sender}`}>
-            {msg.text}
+            {/* AQUÍ HACEMOS EL REEMPLAZO */}
+            {msg.sender === 'bot' ? (
+              <MarkdownRenderer content={msg.text} />
+            ) : (
+              msg.text
+            )}
           </div>
         ))}
         {/* Este div invisible es el ancla para el scroll automático */}

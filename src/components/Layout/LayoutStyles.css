@@ -1,0 +1,108 @@
+/* ==========================================================================
+   TICKET 1: Fijar Encabezado Existente (Modifica el componente de tu equipo)
+   ========================================================================== */
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 1000;
+  background-color: var(--nav-bg, #ffffff);
+  border-bottom: 1px solid #e5e7eb;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   TICKET 2: Estructura Layout Principal (Sidebar + ChatPage)
+   ========================================================================== */
+.app-layout-body {
+  display: flex;
+  margin-top: 60px; /* Deja el espacio exacto para que el Header fijo no tape el contenido */
+  height: calc(100vh - 60px);
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Fuerza a que la página de chat de tus compañeros ocupe todo el espacio restante */
+.app-layout-body > :last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Componente Sidebar */
+.app-sidebar {
+  width: 260px;
+  background-color: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.new-chat-btn {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 24px;
+  transition: background-color 0.2s;
+}
+
+.new-chat-btn:hover { 
+  background-color: #1d4ed8; 
+}
+
+.history-title { 
+  font-size: 0.875rem; 
+  color: #6b7280; 
+  font-weight: 600; 
+  text-transform: uppercase; 
+  margin-bottom: 12px; 
+}
+
+.history-items { 
+  list-style: none; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+  padding: 0; 
+  margin: 0;
+}
+
+.history-item { 
+  padding: 10px; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  color: #374151; 
+  font-size: 0.95rem; 
+  transition: background-color 0.2s;
+}
+
+.history-item:hover { 
+  background-color: #e5e7eb; 
+}
+
+.history-item.active { 
+  background-color: #e0e7ff; 
+  color: #4338ca; 
+  font-weight: 500; 
+}
+
+/* Criterio de Aceptación: Asegurar que sea responsive en mobile */
+@media (max-width: 768px) {
+  .app-sidebar {
+    display: none; /* Oculta la barra lateral de forma fluida en pantallas móviles */
+  }
+}

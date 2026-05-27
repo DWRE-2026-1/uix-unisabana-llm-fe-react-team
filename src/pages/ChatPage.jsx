@@ -34,7 +34,6 @@ export function ChatPage() {
     event.preventDefault();
     const content = prompt.trim();
     if (!content || loading) return;
-
     setPrompt("");
     await sendMessage({
       content,
@@ -55,7 +54,6 @@ export function ChatPage() {
       setMobileOpen(false);
       return;
     }
-
     selectConversation(conversationId);
     setPrompt("");
   }

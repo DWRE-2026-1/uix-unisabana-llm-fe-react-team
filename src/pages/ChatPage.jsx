@@ -28,7 +28,7 @@ export function ChatPage() {
     setMobileOpen
   } = useConversations();
 
-  const { messages, loading, sendMessage } = useChatMessages(activeId);
+  const { messages, loading, error, clearError, sendMessage } = useChatMessages(activeId);
 
   async function sendPrompt(event) {
     event.preventDefault();
@@ -85,6 +85,14 @@ export function ChatPage() {
               onProviderChange={setProvider}
               onModelChange={setModel}
             />
+            {error ? (
+              <div className="chat-error-banner" role="alert">
+                <p className="error-text">{error}</p>
+                <button type="button" className="secondary-button" onClick={clearError}>
+                  Cerrar
+                </button>
+              </div>
+            ) : null}
             <ChatThread messages={messages} loading={loading} />
             <ChatComposer
               prompt={prompt}

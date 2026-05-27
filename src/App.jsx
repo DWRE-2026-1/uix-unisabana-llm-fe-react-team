@@ -11,6 +11,12 @@ import { AdminRolesPage } from "./pages/admin/AdminRolesPage";
 import logoDark from "./images/logo-unisabana-dark.png";
 import logoLight from "./images/logo-unisabana-light.png";
 
+// ==========================================
+// TUS NUEVOS IMPORTS (TICKETS 1 Y 2)
+// ==========================================
+import Sidebar from "./components/Layout/Sidebar";
+import "./components/Layout/LayoutStyles.css";
+
 function TopNav({ theme, onToggleTheme }) {
   const { user, isAdmin, logout } = useAuth();
   const logo = theme === "dark" ? logoDark : logoLight;
@@ -64,7 +70,15 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
 
         <Route element={<RequireAuth />}>
-          <Route path="/" element={<ChatPage />} />
+          {/* =========================================================
+              AQUÍ ESTÁ TU CAMBIO: Envolvemos el Chat con tu Sidebar 
+              ========================================================= */}
+          <Route path="/" element={
+            <div className="app-layout-body">
+              <Sidebar />
+              <ChatPage />
+            </div>
+          } />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
 
